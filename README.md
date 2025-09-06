@@ -4,6 +4,13 @@ This will be used to run a streamlit app that allows a user to input specific po
 
 
 
+# Install the dependencies
+```bash
+uv sync
+```
+
 
 # Use this to run python code to Streamlit App
+```bash
 uv run streamlit run main.py
+```
