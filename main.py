@@ -51,35 +51,38 @@ def create_fantasy_scoring_inputs():
     st.header("⚙️ Fantasy Scoring Settings")
     st.markdown("Customize your league's fantasy point values:")
     
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     
     with col1:
         st.subheader("🏒 Skater Scoring")
         g_pts = st.number_input("Goals (G)", min_value=0.0, max_value=20.0, value=6.0, step=0.5, key="g_pts")
         a_pts = st.number_input("Assists (A)", min_value=0.0, max_value=20.0, value=4.0, step=0.5, key="a_pts")
+        plusminus_pts = st.number_input("Plus/Minus (+/-)", min_value=-2.0, max_value=5.0, value=0.0, step=0.1, key="plusminus_pts")
         pim_pts = st.number_input("Penalty Minutes (PIM)", min_value=-5.0, max_value=5.0, value=1.0, step=0.1, key="pim_pts")
+        ppg_pts = st.number_input("PP Goals (PPG)", min_value=0.0, max_value=20.0, value=1.0, step=0.5, key="ppg_pts")
+        ppp_pts = st.number_input("PP Points (PPP)", min_value=0.0, max_value=20.0, value=1.0, step=0.5, key="ppp_pts")
     
     with col2:
-        st.subheader("⚡ Power Play")
-        ppg_pts = st.number_input("PP Goals (PPG)", min_value=0.0, max_value=20.0, value=1.0, step=0.5, key="ppg_pts")
-        ppp_pts = st.number_input("PP Points (PPP)", min_value=0.0, max_value=20.0, value=2.0, step=0.5, key="ppp_pts")
-        
-    with col3:
-        st.subheader("💪 Physical")
-        sog_pts = st.number_input("Shots on Goal (SOG)", min_value=0.0, max_value=5.0, value=0.25, step=0.05, key="sog_pts")
+        # Use empty subheader to match exact height of column 1's subheader
+        st.subheader("")  # Empty subheader to match column 1's header height exactly
+        sog_pts = st.number_input("Shots on Goal (SOG)", min_value=0.0, max_value=5.0, value=0.5, step=0.05, key="sog_pts")
         hit_pts = st.number_input("Hits (HIT)", min_value=0.0, max_value=5.0, value=2.0, step=0.1, key="hit_pts")
         blk_pts = st.number_input("Blocks (BLK)", min_value=0.0, max_value=5.0, value=2.0, step=0.1, key="blk_pts")
-    
-    with col4:
+        
+    with col3:
         st.subheader("🥅 Goalie Scoring")
         w_pts = st.number_input("Wins (W)", min_value=0.0, max_value=20.0, value=2.0, step=0.5, key="w_pts")
-        sv_pts = st.number_input("Saves (SV)", min_value=0.0, max_value=5.0, value=0.5, step=0.05, key="sv_pts")
+        l_pts = st.number_input("Losses (L)", min_value=-5.0, max_value=5.0, value=-0.0, step=0.1, key="l_pts")
+        sv_pts = st.number_input("Saves (SV)", min_value=0.0, max_value=5.0, value=0.0, step=0.05, key="sv_pts")
         so_pts = st.number_input("Shutouts (SO)", min_value=0.0, max_value=20.0, value=2.0, step=0.5, key="so_pts")
+        gaa_pts = st.number_input("Goals Against Avg (GAA)", min_value=-5.0, max_value=0.0, value=-0.0, step=0.1, key="gaa_pts")
+        svp_pts = st.number_input("Save % (SV%)", min_value=0.0, max_value=100.0, value=0.5, step=1.0, key="svp_pts")
     
     # Store scoring in a dictionary
     scoring = {
-        'G': g_pts, 'A': a_pts, 'PIM': pim_pts, 'PPG': ppg_pts, 'PPP': ppp_pts,
-        'SOG': sog_pts, 'HIT': hit_pts, 'BLK': blk_pts, 'W': w_pts, 'SV': sv_pts, 'SO': so_pts
+        'G': g_pts, 'A': a_pts, '(+/-)': plusminus_pts, 'PIM': pim_pts, 'PPG': ppg_pts, 'PPP': ppp_pts,
+        'SOG': sog_pts, 'HIT': hit_pts, 'BLK': blk_pts, 'W': w_pts, 'L': l_pts, 
+        'SV': sv_pts, 'SO': so_pts, 'GAA': gaa_pts, 'SV%': svp_pts
     }
     
     return scoring
@@ -95,6 +98,8 @@ def calculate_fantasy_points(df, scoring, player_type='skater'):
             df['Fantasy Points'] += df['G'] * scoring['G']
         if 'A' in df.columns and 'A' in scoring:
             df['Fantasy Points'] += df['A'] * scoring['A']
+        if '(+/-)' in df.columns and '(+/-)' in scoring:
+            df['Fantasy Points'] += df['(+/-)'] * scoring['(+/-)']
         if 'PIM' in df.columns and 'PIM' in scoring:
             df['Fantasy Points'] += df['PIM'] * scoring['PIM']
         if 'PPG' in df.columns and 'PPG' in scoring:
@@ -111,10 +116,16 @@ def calculate_fantasy_points(df, scoring, player_type='skater'):
         # Calculate goalie fantasy points
         if 'W' in df.columns and 'W' in scoring:
             df['Fantasy Points'] += df['W'] * scoring['W']
+        if 'L' in df.columns and 'L' in scoring:
+            df['Fantasy Points'] += df['L'] * scoring['L']
         if 'SV' in df.columns and 'SV' in scoring:
             df['Fantasy Points'] += df['SV'] * scoring['SV']
         if 'SO' in df.columns and 'SO' in scoring:
             df['Fantasy Points'] += df['SO'] * scoring['SO']
+        if 'GAA' in df.columns and 'GAA' in scoring:
+            df['Fantasy Points'] += df['GAA'] * scoring['GAA']
+        if 'SV%' in df.columns and 'SV%' in scoring:
+            df['Fantasy Points'] += df['SV%'] * scoring['SV%']
     
     df['Fantasy Points'] = df['Fantasy Points'].round(1)
     return df
@@ -122,22 +133,22 @@ def calculate_fantasy_points(df, scoring, player_type='skater'):
 def create_combined_rankings(skaters, goalies):
     """Create a combined ranking of all players"""
     # Select ALL relevant columns for skaters including the requested fantasy stats
-    skater_cols = ['Player', 'Team', 'Pos', 'Fantasy Points', 'G', 'A', 'PTS', 'PIM', 'PPG', 'PPP', 'SOG', 'HIT', 'BLK']
+    skater_cols = ['Player', 'Team', 'Pos', 'Fantasy Points', 'G', 'A', 'PTS', '(+/-)', 'PIM', 'PPG', 'PPP', 'SOG', 'HIT', 'BLK']
     skaters_display = skaters[skater_cols].copy()
     skaters_display['Player Type'] = 'Skater'
     
     # Select relevant columns for goalies  
-    goalie_cols = ['Player', 'Team', 'Fantasy Points', 'W', 'SV', 'SO', 'SV%', 'GAA']
+    goalie_cols = ['Player', 'Team', 'Fantasy Points', 'W', 'L', 'SV', 'SO', 'SV%', 'GAA']
     goalies_display = goalies[goalie_cols].copy()
     goalies_display['Player Type'] = 'Goalie'
     goalies_display['Pos'] = 'G'
     
     # Add missing columns to goalies to match skaters structure
-    for col in ['G', 'A', 'PTS', 'PIM', 'PPG', 'PPP', 'SOG', 'HIT', 'BLK']:
+    for col in ['G', 'A', 'PTS', '(+/-)', 'PIM', 'PPG', 'PPP', 'SOG', 'HIT', 'BLK']:
         goalies_display[col] = 0
     
     # Add missing goalie columns to skaters
-    for col in ['W', 'SV', 'SO', 'SV%', 'GAA']:
+    for col in ['W', 'L', 'SV', 'SO', 'SV%', 'GAA']:
         skaters_display[col] = 0
     
     # Combine and sort by Fantasy Points
@@ -158,12 +169,18 @@ def style_dataframe_for_fantasy_points(df):
     return df.style.apply(highlight_fantasy_points, axis=0)
 
 def main():
-    # Centered and underlined header
-    st.markdown("""
-    <h1 style='text-align: center; text-decoration: underline; margin-bottom: 30px;'>
-    🏒 NHL Fantasy Draft Tool
-    </h1>
-    """, unsafe_allow_html=True)
+    # Display Jake's custom header logo (perfectly centered)
+    col1, col2, col3 = st.columns([1.5, 1, 1.5])
+    with col2:
+        try:
+            st.image("images/jakes_draft_tool_logo.png")  # Use natural column width
+        except:
+            # Fallback to text header if image not found
+            st.markdown("""
+            <h1 style='text-align: center; text-decoration: underline; margin-bottom: 30px;'>
+            🏒 Jake's Draft Tool
+            </h1>
+            """, unsafe_allow_html=True)
     
     # Custom CSS for Fantasy Points column styling (2nd column)
     st.markdown("""
@@ -256,8 +273,8 @@ def main():
             # Display the ranking table with ALL requested columns
             st.dataframe(
                 display_data[['Rank', 'Fantasy Points', 'Player', 'Team', 'Pos', 
-                             'G', 'A', 'PTS', 'PIM', 'PPG', 'PPP', 'SOG', 'HIT', 'BLK', 
-                             'W', 'SV', 'SO', 'SV%', 'GAA']],
+                             'G', 'A', 'PTS', '(+/-)', 'PIM', 'PPG', 'PPP', 'SOG', 'HIT', 'BLK', 
+                             'W', 'L', 'SV', 'SO', 'SV%', 'GAA']],
                 width='stretch',
                 height=600,
                 hide_index=True,
@@ -420,7 +437,7 @@ def main():
             
             st.dataframe(
                 goalies_only[['Goalie Rank', 'Fantasy Points', 'Player', 'Team', 
-                             'W', 'SV', 'SO', 'SV%', 'GAA']],
+                             'W', 'L', 'SV', 'SO', 'SV%', 'GAA']],
                 width='stretch',
                 height=400,
                 hide_index=True
