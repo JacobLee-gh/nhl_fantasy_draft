@@ -3,6 +3,10 @@ This will be used to run a streamlit app that allows a user to input specific po
 
 
 
+# Install the dependencies
+```bash
+uv sync
+```
 
 # Install the dependencies
 ```bash
